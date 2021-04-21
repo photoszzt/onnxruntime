@@ -50,9 +50,14 @@ Status RegisterSnpeContribKernels(KernelRegistry& kernel_registry) {
 }  // namespace contrib
 
 
-std::shared_ptr<KernelRegistry> SNPEExecutionProvider::GetKernelRegistry() const {
-  static KernelRegistryAndStatus ret;
+KernelRegistryAndStatus GetSnpeKernelRegistry() {
+  KernelRegistryAndStatus ret;
   ret.st = ::onnxruntime::contrib::snpe::RegisterSnpeContribKernels(*ret.kernel_registry);
+  return ret;
+}
+
+std::shared_ptr<KernelRegistry> SNPEExecutionProvider::GetKernelRegistry() const {
+  static KernelRegistryAndStatus ret = GetSnpeKernelRegistry();
   //throw if the registry failed to initialize
   ORT_THROW_IF_ERROR(ret.st);
   return ret.kernel_registry;
