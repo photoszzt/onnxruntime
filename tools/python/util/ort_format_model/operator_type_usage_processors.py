@@ -325,7 +325,6 @@ def _create_operator_type_usage_processors():
     default_processor_onnx_ops = ['Abs', 'ArgMax', 'ArgMin', 'AveragePool',
                                   'BatchNormalization', 'BitShift',
                                   'Ceil', 'Clip', 'Conv', 'CumSum',
-                                  # 'DequantizeLinear',
                                   'Exp', 'Expand',
                                   'Floor',
                                   'Gemm',
@@ -350,7 +349,7 @@ def _create_operator_type_usage_processors():
                                                              'Greater',
                                                              'Less',
                                                              'Mul',
-                                                             'Neg',  # used for shape in tflite TransposeConv
+                                                             'Neg',  # used in tflite TransposeConv conversion
                                                              'Sub']
 
     internal_ops = ['QLinearAdd', 'QLinearMul']
@@ -399,6 +398,7 @@ def _create_operator_type_usage_processors():
 
     # make sure all the dequantize types are enabled. we use int32_t for parts of GEMM and Conv so just
     # enabling int8 and uint8 is not enough.
+    # TODO: Only apply required types to the global type list and ignore if it's model based per-op type reduction
     add(DefaultTypeUsageProcessor('ai.onnx', 'DequantizeLinear', inputs=[0],
                                   required_input_types={0: {'int8_t', 'uint8_t', 'int32_t'}}))
 
