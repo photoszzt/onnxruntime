@@ -227,6 +227,10 @@ packages = [
     'onnxruntime.capi.training',
     'onnxruntime.datasets',
     'onnxruntime.tools',
+    'onnxruntime.tools.ort_format_model',
+    'onnxruntime.tools.ort_format_model.ort_flatbuffers_py',
+    'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.experimental',
+    'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.experimental.fbs',
     'onnxruntime.quantization',
     'onnxruntime.quantization.operators',
     'onnxruntime.quantization.CalTableFlatBuffers',
@@ -309,6 +313,7 @@ package_data["onnxruntime"] = data + examples + extra
 version_number = ''
 with open('VERSION_NUMBER') as f:
     version_number = f.readline().strip()
+
 if nightly_build:
     # https://docs.microsoft.com/en-us/azure/devops/pipelines/build/variables
     build_suffix = environ.get('BUILD_BUILDNUMBER')
