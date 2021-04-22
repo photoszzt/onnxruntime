@@ -2546,8 +2546,6 @@ It's an extension of Gelu. It takes the sum of input A and bias input B as the i
       .SetDomain(kMSDomain)
       .SinceVersion(1)
       .SetDoc("Onnx node for SNPE.")
-      .Attr("output1_shape", "output shape.", AttributeProto::INTS)
-      .Attr("output2_shape", "output shape.", AttributeProto::INTS, OPTIONAL_VALUE)
       .Attr("payload", "payload of the SNPE DLC file.", AttributeProto::STRING)
       .Attr("snpe_version", "(Optional) SNPE version used to convert the model.", AttributeProto::STRING, OPTIONAL_VALUE)
       .Attr("target_device", "(Optional) Target device like CPU, DSP, etc.", AttributeProto::STRING, OPTIONAL_VALUE)

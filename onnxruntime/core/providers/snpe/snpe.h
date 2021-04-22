@@ -16,9 +16,19 @@ namespace snpe {
 class Snpe : public OpKernel {
  public:
   explicit Snpe(const OpKernelInfo& info) : OpKernel(info) {
-    const auto snpeEp = static_cast<const SNPEExecutionProvider*>(info.GetExecutionProvider());
+    auto output_cout = info.GetOutputCount();
+    output_dims_.resize(output_cout);
+    for (uint32_t output_i = 0; output_i < output_cout; ++output_i) {
+      auto output = info.node().OutputDefs().at(output_i);
+      auto output_shape = output->Shape();
+      for (int i = 0; i < output_shape->dim_size(); ++i) {
+        output_dims_.at(output_i).push_back(output_shape->dim(i).dim_value());
+      }
+    }
+
     const auto payload = info.GetAttrOrDefault<std::string>("payload", "");
-    output_dims_ = info.GetAttrsOrDefault<int64_t>("output1_shape");
+    ORT_ENFORCE((payload.length() > 0), "dlc model payload is empty!");
+    const auto snpeEp = static_cast<const SNPEExecutionProvider*>(info.GetExecutionProvider());
     const bool enforeDsp = snpeEp->GetEnforceDsp();
     snpe_rt_ = SnpeLib::SnpeLibFactory(reinterpret_cast<const unsigned char*>(payload.c_str()), payload.length(), nullptr, enforeDsp);
   }
@@ -29,7 +39,7 @@ class Snpe : public OpKernel {
     const size_t input_size = input_tensor->Shape().Size();
     const size_t input_element_byte_size = input_tensor->DataType()->Size();
 
-    TensorShape output_shape = TensorShape(output_dims_);
+    TensorShape output_shape = TensorShape(output_dims_.at(0));
     auto output_tensor = context->Output(0, output_shape);
     auto output_data = output_tensor->MutableDataRaw();
     const size_t output_element_byte_size = output_tensor->DataType()->Size();
@@ -44,7 +54,7 @@ class Snpe : public OpKernel {
   }
 
  private:
-  std::vector<int64_t> output_dims_;
+  std::vector<std::vector<int64_t>> output_dims_;
   std::unique_ptr<SnpeLib> snpe_rt_;
 };
 }  // namespace snpe
