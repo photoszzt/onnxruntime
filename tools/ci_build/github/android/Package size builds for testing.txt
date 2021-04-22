@@ -1,4 +1,6 @@
-Package size builds for testing
+Package size builds for testing.
+
+NOTE: This was with an older config and ops are slightly different (-BatchNormalization, +QLinearAveragePool)
 
 ----
 Base config entries (add one for opset 12 and a duplicate for opset 13)
