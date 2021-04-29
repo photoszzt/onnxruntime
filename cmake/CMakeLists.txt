@@ -30,7 +30,7 @@ set (CMAKE_C_STANDARD 99)
 include(CheckCXXCompilerFlag)
 include(CheckLanguage)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 20)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 # NOTE: POSITION INDEPENDENT CODE hurts performance, and it only make sense on POSIX systems
@@ -694,6 +694,10 @@ if(UNIX AND onnxruntime_ENABLE_LTO AND NOT onnxruntime_PREFER_SYSTEM_LIB)
   target_link_options(protoc PRIVATE "-Wl,--no-as-needed")
 endif()
 
+if(MSVC)
+  target_compile_options(${PROTOBUF_LIB} PRIVATE "/wd5054")
+endif()
+
 include(protobuf_function.cmake)
 #protobuf end
 
@@ -788,10 +792,6 @@ FILE(TO_NATIVE_PATH ${PROJECT_SOURCE_DIR}  ORT_SOURCE_DIR)
 
 set(ORT_WARNING_FLAGS)
 if (WIN32)
-    add_definitions(-DPLATFORM_WINDOWS -DNOGDI -DNOMINMAX -D_USE_MATH_DEFINES)
-    if(onnxruntime_ENABLE_MEMLEAK_CHECKER)
-      add_definitions(-DONNXRUNTIME_ENABLE_MEMLEAK_CHECK)
-    endif()
     # parallel build
     # These compiler opitions cannot be forwarded to NVCC, so cannot use add_compiler_options
     string(APPEND CMAKE_CXX_FLAGS " /MP")
@@ -805,7 +805,7 @@ if (WIN32)
     if(onnxruntime_USE_OPENMP)
       list(APPEND ORT_WARNING_FLAGS "/wd6993") # Code analysis ignores OpenMP constructs
     endif()
-    
+    list(APPEND ORT_WARNING_FLAGS "/wd5054")
     # Treat warning as error if onnxruntime_DEV_MODE is ON
     # For cross-compiled ARM64 binaries, there are too many warnings to fix, hence ignore warnings for now
     if (onnxruntime_DEV_MODE AND NOT CMAKE_CROSSCOMPILING)
@@ -857,6 +857,7 @@ else()
   check_cxx_compiler_flag(-Wclass-memaccess HAS_CLASS_MEMACCESS)
   check_cxx_compiler_flag(-Wmaybe-uninitialized HAS_MAYBE_UNINITIALIZED)
   check_cxx_compiler_flag(-Wstrict-aliasing HAS_STRICT_ALIASING)
+  check_cxx_compiler_flag(-Wambiguous-reversed-operator HAS_AMBIGUOUS_REVERSED_OPERATOR)
 
   if(HAS_TAUTOLOGICAL_POINTER_COMPARE)
     #we may have extra null pointer checkings in debug build, it's not an issue
@@ -868,6 +869,9 @@ else()
   endif()
   if(HAS_PARENTHESES)
     list(APPEND ORT_WARNING_FLAGS -Wno-parentheses)
+  endif()
+  if(HAS_AMBIGUOUS_REVERSED_OPERATOR)
+    list(APPEND ORT_WARNING_FLAGS -Wno-ambiguous-reversed-operator)
   endif()
 endif()
 
@@ -957,6 +961,10 @@ if (onnxruntime_USE_COREML)
 endif()
 function(onnxruntime_set_compile_flags target_name)
     if (MSVC)
+      target_compile_definitions(${target_name} PUBLIC -DPLATFORM_WINDOWS -DNOGDI -DNOMINMAX -D_USE_MATH_DEFINES -D_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS)
+      if(onnxruntime_ENABLE_MEMLEAK_CHECKER)
+        target_compile_definitions(${target_name} PUBLIC -DDONNXRUNTIME_ENABLE_MEMLEAK_CHECK)      
+      endif()
       target_compile_options(${target_name} PRIVATE "$<$<COMPILE_LANGUAGE:CUDA>:SHELL:--compiler-options /utf-8>" "$<$<NOT:$<COMPILE_LANGUAGE:CUDA>>:/utf-8>")
       target_compile_options(${target_name} PRIVATE "$<$<COMPILE_LANGUAGE:CUDA>:SHELL:--compiler-options /sdl>" "$<$<NOT:$<COMPILE_LANGUAGE:CUDA>>:/sdl>")
       set_target_properties(${target_name} 
@@ -1347,11 +1355,7 @@ if (onnxruntime_USE_CUDA)
   enable_language(CUDA)
   message( STATUS "CMAKE_CUDA_COMPILER_VERSION: ${CMAKE_CUDA_COMPILER_VERSION}")
 
-  if (CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER_EQUAL 11)
-    set(CMAKE_CUDA_STANDARD 14)
-  else()
-    set(CMAKE_CUDA_STANDARD 11)
-  endif()
+  set(CMAKE_CUDA_STANDARD 20)
   file(TO_CMAKE_PATH ${onnxruntime_CUDNN_HOME} onnxruntime_CUDNN_HOME)
   set(ONNXRUNTIME_CUDA_LIBRARIES ${CUDA_LIBRARIES})
 
