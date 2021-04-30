@@ -1562,7 +1562,9 @@ def derive_linux_build_property():
         return "/p:IsLinuxBuild=\"true\""
 
 
-def build_nuget_package(source_dir, build_dir, configs, use_cuda, use_openvino, use_tensorrt, use_dnnl, use_nuphar):
+def build_nuget_package(
+        source_dir, build_dir, configs, use_cuda,
+        use_openvino, use_tensorrt, use_dnnl, use_nuphar, use_snpe, arm64, path_to_protoc_exe):
     if not (is_windows() or is_linux()):
         raise BuildError(
             'Currently csharp builds and nuget package creation is only supportted '
@@ -1587,6 +1589,9 @@ def build_nuget_package(source_dir, build_dir, configs, use_cuda, use_openvino, 
         package_name = "/p:OrtPackageId=\"Microsoft.ML.OnnxRuntime.Gpu\""
     elif use_nuphar:
         package_name = "/p:OrtPackageId=\"Microsoft.ML.OnnxRuntime.Nuphar\""
+    if use_snpe:
+        execution_provider = "/p:ExecutionProvider=\"snpe\""
+        package_name = "/p:OrtPackageId=\"Microsoft.ML.OnnxRuntime.Snpe\""
     else:
         pass
 
@@ -1607,13 +1612,19 @@ def build_nuget_package(source_dir, build_dir, configs, use_cuda, use_openvino, 
 
         configuration = "/p:Configuration=\"" + config + "\""
 
+        targetArch = ""
+        if arm64:
+            targetArch = "/p:TargetArchitecture=arm64"
+            protoc_path, filename = os.path.split(path_to_protoc_exe)
+            protocDir = "/p:ProtocDirectory=" + protoc_path
+
         cmd_args = ["dotnet", "msbuild", "OnnxRuntime.CSharp.sln", configuration, package_name, is_linux_build,
-                    ort_build_dir]
+                    ort_build_dir, targetArch, protocDir]
         run_subprocess(cmd_args, cwd=csharp_build_dir)
 
         cmd_args = [
             "dotnet", "msbuild", "OnnxRuntime.CSharp.proj", "/t:CreatePackage",
-            package_name, configuration, execution_provider, is_linux_build, ort_build_dir]
+            package_name, configuration, execution_provider, is_linux_build, ort_build_dir, targetArch, protocDir]
         run_subprocess(cmd_args, cwd=csharp_build_dir)
 
 
@@ -1806,7 +1817,7 @@ def main():
     if args.build_csharp or args.build_nuget or args.build_java or args.build_nodejs:
         args.build_shared_lib = True
 
-    if args.build_nuget and cross_compiling:
+    if args.build_nuget and cross_compiling and not args.arm64:
         raise BuildError('Currently nuget package creation is not supported while cross-compiling')
 
     if args.enable_pybind and args.disable_exceptions:
@@ -2075,7 +2086,10 @@ def main():
                 args.use_openvino,
                 args.use_tensorrt,
                 args.use_dnnl,
-                args.use_nuphar
+                args.use_nuphar,
+                args.use_snpe,
+                args.arm64,
+                path_to_protoc_exe
             )
 
     if args.test and args.build_nuget:
