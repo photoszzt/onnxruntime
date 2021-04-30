@@ -1612,20 +1612,24 @@ def build_nuget_package(
 
         configuration = "/p:Configuration=\"" + config + "\""
 
+        cmd_args = ["dotnet", "msbuild", "OnnxRuntime.CSharp.sln", configuration, package_name, is_linux_build,
+                    ort_build_dir]
+
         targetArch = ""
         protocDir = ""
         if arm64:
             targetArch = "/p:TargetArchitecture=arm64"
             protoc_path, filename = os.path.split(path_to_protoc_exe)
             protocDir = "/p:ProtocDirectory=" + protoc_path
+            cmd_args.extend([targetArch, protocDir])
 
-        cmd_args = ["dotnet", "msbuild", "OnnxRuntime.CSharp.sln", configuration, package_name, is_linux_build,
-                    ort_build_dir, targetArch, protocDir]
         run_subprocess(cmd_args, cwd=csharp_build_dir)
 
         cmd_args = [
             "dotnet", "msbuild", "OnnxRuntime.CSharp.proj", "/t:CreatePackage",
-            package_name, configuration, execution_provider, is_linux_build, ort_build_dir, targetArch, protocDir]
+            package_name, configuration, execution_provider, is_linux_build, ort_build_dir]
+        if arm64:
+            cmd_args.extend([targetArch, protocDir])
         run_subprocess(cmd_args, cwd=csharp_build_dir)
 
 
