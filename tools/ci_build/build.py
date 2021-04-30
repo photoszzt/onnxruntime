@@ -1613,6 +1613,7 @@ def build_nuget_package(
         configuration = "/p:Configuration=\"" + config + "\""
 
         targetArch = ""
+        protocDir = ""
         if arm64:
             targetArch = "/p:TargetArchitecture=arm64"
             protoc_path, filename = os.path.split(path_to_protoc_exe)
