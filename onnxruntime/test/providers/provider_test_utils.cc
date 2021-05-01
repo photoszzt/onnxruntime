@@ -382,7 +382,7 @@ void Check<TensorSeq>(const OpTester::Data& expected_data,
     temp_value.Init(const_cast<Tensor*>(&exp_seq.Get(i)),
                     DataTypeImpl::GetType<Tensor>(), null_deleter);
     OpTester::Data temp_data(NodeArg("dummy", nullptr), std::move(temp_value),
-                             optional<float>(), optional<float>());
+                             std::optional<float>(), std::optional<float>());
     Check(temp_data, output_seq.Get(i), provider_type);
   }
 }
@@ -466,7 +466,7 @@ void OpTester::SetOutputAbsErr(const char* name, float v) {
       std::find_if(output_data_.begin(), output_data_.end(),
                    [name](Data& data) { return (data.def_.Name() == name); });
   ORT_ENFORCE(it != output_data_.end());
-  it->absolute_error_ = optional<float>(v);
+  it->absolute_error_ = std::optional<float>(v);
 }
 
 void OpTester::SetOutputRelErr(const char* name, float v) {
@@ -474,7 +474,7 @@ void OpTester::SetOutputRelErr(const char* name, float v) {
       std::find_if(output_data_.begin(), output_data_.end(),
                    [name](Data& data) { return (data.def_.Name() == name); });
   ORT_ENFORCE(it != output_data_.end());
-  it->relative_error_ = optional<float>(v);
+  it->relative_error_ = std::optional<float>(v);
 }
 
 void OpTester::AddNodes(
@@ -983,8 +983,8 @@ void OpTester::AddReferenceOutputs(const std::string& model_path) {
 
     output_data_.push_back(Data(NodeArg(output_names[out_idx], &tmp_type_proto),
                                 std::move(subgraph_fetches[out_idx]),
-                                optional<float>(),
-                                optional<float>()));
+                                std::optional<float>(),
+                                std::optional<float>()));
   }
 }
 

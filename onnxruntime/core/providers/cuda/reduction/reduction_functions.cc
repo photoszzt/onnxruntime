@@ -8,7 +8,7 @@
 #include <iterator>
 #include <utility>
 
-#include "core/common/optional.h"
+#include <optional>
 #include "core/framework/tensor_shape.h"
 #include "core/providers/common.h"
 

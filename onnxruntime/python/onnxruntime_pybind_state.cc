@@ -11,7 +11,7 @@
 
 #include "core/common/logging/logging.h"
 #include "core/common/logging/severity.h"
-#include "core/common/optional.h"
+#include <optional>
 #include "core/framework/arena_extend_strategy.h"
 #include "core/framework/data_transfer_utils.h"
 #include "core/framework/data_types_internal.h"

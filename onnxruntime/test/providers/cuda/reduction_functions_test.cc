@@ -7,7 +7,7 @@
 
 #include "gtest/gtest.h"
 
-#include "core/common/optional.h"
+#include <optional>
 #include "core/providers/cuda/reduction/reduction_functions.h"
 #include "core/providers/cuda/shared_inc/cuda_utils.h"
 #include "test/common/tensor_op_test_utils.h"

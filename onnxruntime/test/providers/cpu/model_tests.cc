@@ -26,6 +26,7 @@ namespace onnxruntime {
 namespace test {
 // parameter is provider_name + "_" + model_path
 class ModelTest : public testing::TestWithParam<std::basic_string<ORTCHAR_T>> {};
+GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(ModelTest);
 namespace {
 struct BrokenTest {
   std::string test_name_;
