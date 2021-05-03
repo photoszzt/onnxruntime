@@ -439,9 +439,8 @@ void TensorToVideoFrameConverter::ConvertGPUTensorToDX12Texture(
   outputResourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 
   if (!UAV_resource_ || outputDesc.Format != UAV_resource_->GetDesc().Format || outputDesc.Width != UAV_resource_->GetDesc().Width || outputDesc.Height != UAV_resource_->GetDesc().Height) {
-    CD3DX12_HEAP_PROPERTIES prop(D3D12_HEAP_TYPE_DEFAULT);
     WINML_THROW_IF_FAILED(device_cache.GetD3D12Device()->CreateCommittedResource(
-        &prop,
+        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
         D3D12_HEAP_FLAG_NONE,
         &outputResourceDesc,
         D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
@@ -527,17 +526,15 @@ void TensorToVideoFrameConverter::ConvertGPUTensorToDX12Texture(
 
     auto dispatchWidth = static_cast<UINT>((tensorDesc.sizes[3] - 1) / 16 + 1);
     auto dispatchHeight = static_cast<UINT>((tensorDesc.sizes[2] - 1) / 4 + 1);
-    CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(pInputResource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-    command_list_->ResourceBarrier(1, &barrier);
+
+    command_list_->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(pInputResource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE));
     command_list_->Dispatch(dispatchWidth, dispatchHeight, 1);
-    barrier = CD3DX12_RESOURCE_BARRIER::Transition(pInputResource, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-    command_list_->ResourceBarrier(1, &barrier);
-    barrier = CD3DX12_RESOURCE_BARRIER::Transition(UAV_resource_.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
+    command_list_->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(pInputResource, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
+
     // Copy the UAV data to the output resource after detensorization
-    command_list_->ResourceBarrier(1, &barrier);
+    command_list_->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(UAV_resource_.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE));
     command_list_->CopyResource(pOutputResource, UAV_resource_.Get());
-    barrier = CD3DX12_RESOURCE_BARRIER::Transition(UAV_resource_.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-    command_list_->ResourceBarrier(1, &barrier);
+    command_list_->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(UAV_resource_.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
 
     WINML_THROW_IF_FAILED(command_list_->Close());
     ID3D12CommandList* pComputeToGPUCLs[] = {command_list_.Get()};
@@ -567,12 +564,10 @@ void TensorToVideoFrameConverter::ConvertGPUTensorToSoftwareBitmap(
 
   // TODO: Make an allocator for readback heaps
   if (!readback_heap_ || readback_heap_->GetDesc().Width < singleVideoFramebufferSize) {
-    CD3DX12_HEAP_PROPERTIES prop(D3D12_HEAP_TYPE_READBACK);
-    CD3DX12_RESOURCE_DESC buffer = CD3DX12_RESOURCE_DESC::Buffer(singleVideoFramebufferSize);
     WINML_THROW_IF_FAILED(device_cache.GetD3D12Device()->CreateCommittedResource(
-        &prop,
+        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK),
         D3D12_HEAP_FLAG_NONE,
-        &buffer,
+        &CD3DX12_RESOURCE_DESC::Buffer(singleVideoFramebufferSize),
         D3D12_RESOURCE_STATE_COPY_DEST,
         nullptr,
         IID_PPV_ARGS(&readback_heap_)));
@@ -593,13 +588,12 @@ void TensorToVideoFrameConverter::ConvertGPUTensorToSoftwareBitmap(
   device_cache.SyncD3D12ToCPU();
 
   void* pCPUTensorBuffer = nullptr;
-  CD3DX12_RANGE range(0, singleVideoFramebufferSize);
-  WINML_THROW_IF_FAILED(readback_heap_->Map(0, &range, &pCPUTensorBuffer));
+  WINML_THROW_IF_FAILED(readback_heap_->Map(0, &CD3DX12_RANGE(0, singleVideoFramebufferSize), &pCPUTensorBuffer));
 
   // We avoid the Video Frame pipeline by manually downloading the GPU data to the CPU and detensorize while we are filling the readback heap
   ConvertCPUTensorToSoftwareBitmap(pCPUTensorBuffer, tensorDesc, softwareBitmap);
-  CD3DX12_RANGE range2(0, 0);
-  readback_heap_->Unmap(0, &range2);
+
+  readback_heap_->Unmap(0, &CD3DX12_RANGE(0, 0));
 }
 
 void TensorToVideoFrameConverter::ConvertBatchedDX12TensorToBuffers(
@@ -611,12 +605,10 @@ void TensorToVideoFrameConverter::ConvertBatchedDX12TensorToBuffers(
 
   // TODO: Make an allocator for readback heaps
   if (!readback_heap_ || readback_heap_->GetDesc().Width < buffer_size_in_bytes) {
-    CD3DX12_HEAP_PROPERTIES prop(D3D12_HEAP_TYPE_READBACK);
-    CD3DX12_RESOURCE_DESC buffer = CD3DX12_RESOURCE_DESC::Buffer(buffer_size_in_bytes);
     WINML_THROW_IF_FAILED(device_cache.GetD3D12Device()->CreateCommittedResource(
-        &prop,
+        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK),
         D3D12_HEAP_FLAG_NONE,
-        &buffer,
+        &CD3DX12_RESOURCE_DESC::Buffer(buffer_size_in_bytes),
         D3D12_RESOURCE_STATE_COPY_DEST,
         nullptr,
         IID_PPV_ARGS(&readback_heap_)));
@@ -636,8 +628,7 @@ void TensorToVideoFrameConverter::ConvertBatchedDX12TensorToBuffers(
   device_cache.SyncD3D12ToCPU();
 
   byte* readback_buffer = nullptr;
-  CD3DX12_RANGE range(0, buffer_size_in_bytes);
-  WINML_THROW_IF_FAILED(readback_heap_->Map(0, &range, reinterpret_cast<void**>(&readback_buffer)));
+  WINML_THROW_IF_FAILED(readback_heap_->Map(0, &CD3DX12_RANGE(0, buffer_size_in_bytes), reinterpret_cast<void**>(&readback_buffer)));
   auto readback_buffer_span = gsl::span<byte>(readback_buffer, buffer_size_in_bytes);
   _winml::StoreSpanIntoDisjointBuffers(
       buffers.size(),
@@ -649,8 +640,7 @@ void TensorToVideoFrameConverter::ConvertBatchedDX12TensorToBuffers(
       },
       readback_buffer_span);
 
-  CD3DX12_RANGE range2(0, 0);
-  readback_heap_->Unmap(0, &range2);
+  readback_heap_->Unmap(0, &CD3DX12_RANGE(0, 0));
 }
 
 D3D12_SHADER_RESOURCE_VIEW_DESC TensorToVideoFrameConverter::CreateSRVDescriptor(
