@@ -100,7 +100,7 @@ SNPEExecutionProvider::GetCapability(const onnxruntime::GraphViewer& graph,
 
     // none of the provided registries has a CUDA kernel for this node
     if (snpe_kernel_def == nullptr) {
-      LOGS_DEFAULT(WARNING) << "CUDA kernel not found in registries for Op type: " << node.OpType() << " node name: " << node.Name();
+      LOGS_DEFAULT(WARNING) << "Snpe kernel not found in registries for Op type: " << node.OpType() << " node name: " << node.Name();
       continue;
     }
     
