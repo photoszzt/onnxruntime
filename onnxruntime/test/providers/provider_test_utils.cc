@@ -26,7 +26,7 @@ using namespace ::onnxruntime::logging;
 namespace onnxruntime {
 namespace test {
 
-template<typename T>
+template <typename T>
 Tensor copy_sort(const Tensor& src, const AllocatorPtr& allocator) {
   Tensor result(src.DataType(), src.Shape(), allocator);
   memcpy(result.MutableDataRaw(), src.DataRaw(), src.SizeInBytes());
@@ -39,7 +39,6 @@ Tensor copy_sort(const Tensor& src, const AllocatorPtr& allocator) {
 template <typename T>
 void sort_expected_and_actual_buffers(const Tensor& expected, Tensor& expected_sorted,
                                       const Tensor& actual, Tensor& actual_sorted) {
-
   auto allocator = TestCPUExecutionProvider()->GetAllocator(0, OrtMemTypeDefault);
   expected_sorted = copy_sort<T>(expected, allocator);
   actual_sorted = copy_sort<T>(actual, allocator);
@@ -57,8 +56,8 @@ void sort_expected_and_actual_buffers(std::vector<T>& expected,
 
 struct CheckParams {
   bool sort_output_;
-  optional<float> absolute_error_;
-  optional<float> relative_error_;
+  std::optional<float> absolute_error_;
+  std::optional<float> relative_error_;
 };
 
 inline CheckParams make_params(const OpTester::Data& d) {
@@ -71,7 +70,6 @@ template <typename T>
 struct TensorCheck {
   void operator()(const Tensor& expected_tensor, const Tensor& output_tensor,
                   const std::string& provider_type, const CheckParams& params) const {
-
     Tensor expected_sorted, output_sorted;
     const T* expected;
     const T* output;
@@ -103,7 +101,6 @@ struct TensorCheck<uint8_t> {
   void operator()(const Tensor& expected_tensor,
                   const Tensor& output_tensor,
                   const std::string& provider_type, const CheckParams& params) const {
-
     const bool has_abs_err = params.absolute_error_.has_value();
     const bool has_rel_err = params.relative_error_.has_value();
 
@@ -217,7 +214,6 @@ void InternalNumericalCheck(const Tensor& expected_tensor,
                             const Tensor& output_tensor,
                             const std::string& provider_type,
                             const CheckParams& params) {
-
   const bool has_abs_err = params.absolute_error_.has_value();
   const bool has_rel_err = params.relative_error_.has_value();
 
@@ -238,7 +234,7 @@ void InternalNumericalCheck(const Tensor& expected_tensor,
 
 #if defined(USE_CUDA) || defined(USE_ROCM)
   constexpr float threshold = 0.005f;
-#else 
+#else
   constexpr float threshold = 0.0001f;
 #endif
 
@@ -503,7 +499,7 @@ void OpTester::SetOutputAbsErr(const char* name, float v) {
       std::find_if(output_data_.begin(), output_data_.end(),
                    [name](Data& data) { return (data.def_.Name() == name); });
   ORT_ENFORCE(it != output_data_.end());
-  it->absolute_error_ = optional<float>(v);
+  it->absolute_error_ = std::optional<float>(v);
 }
 
 void OpTester::SetOutputRelErr(const char* name, float v) {
@@ -511,7 +507,7 @@ void OpTester::SetOutputRelErr(const char* name, float v) {
       std::find_if(output_data_.begin(), output_data_.end(),
                    [name](Data& data) { return (data.def_.Name() == name); });
   ORT_ENFORCE(it != output_data_.end());
-  it->relative_error_ = optional<float>(v);
+  it->relative_error_ = std::optional<float>(v);
 }
 
 void OpTester::AddNodes(
@@ -1020,8 +1016,8 @@ void OpTester::AddReferenceOutputs(const std::string& model_path) {
 
     output_data_.push_back(Data(NodeArg(output_names[out_idx], &tmp_type_proto),
                                 std::move(subgraph_fetches[out_idx]),
-                                optional<float>(),
-                                optional<float>()));
+                                std::optional<float>(),
+                                std::optional<float>()));
   }
 }
 
