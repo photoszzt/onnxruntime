@@ -67,7 +67,7 @@ SNPEExecutionProvider::SNPEExecutionProvider(bool enforce_dsp)
     :IExecutionProvider{onnxruntime::kSnpeExecutionProvider}, enforce_dsp_(enforce_dsp) {
   AllocatorCreationInfo device_info(
       [](int) {
-        return onnxruntime::make_unique<CPUAllocator>(OrtMemoryInfo(SNPE, OrtAllocatorType::OrtDeviceAllocator));
+        return std::make_unique<CPUAllocator>(OrtMemoryInfo(SNPE, OrtAllocatorType::OrtDeviceAllocator));
       });
 
   InsertAllocator(CreateAllocator(device_info));
@@ -109,9 +109,9 @@ SNPEExecutionProvider::GetCapability(const onnxruntime::GraphViewer& graph,
 
   std::vector<std::unique_ptr<ComputeCapability>> result;
   for (auto& node_index : candidates) {
-    std::unique_ptr<IndexedSubGraph> sub_graph = onnxruntime::make_unique<IndexedSubGraph>();
+    std::unique_ptr<IndexedSubGraph> sub_graph = std::make_unique<IndexedSubGraph>();
     sub_graph->nodes.push_back(node_index);
-    result.push_back(onnxruntime::make_unique<ComputeCapability>(std::move(sub_graph)));
+    result.push_back(std::make_unique<ComputeCapability>(std::move(sub_graph)));
   }
   return result;
 }

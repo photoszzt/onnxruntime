@@ -18,7 +18,7 @@ struct SNPEProviderFactory : IExecutionProviderFactory {
 };
 
 std::unique_ptr<IExecutionProvider> SNPEProviderFactory::CreateProvider() {
-  return onnxruntime::make_unique<SNPEExecutionProvider>(enforce_dsp_);
+  return std::make_unique<SNPEExecutionProvider>(enforce_dsp_);
 }
 
 std::shared_ptr<IExecutionProviderFactory> CreateExecutionProviderFactory_SNPE(bool enforce_dsp) {
