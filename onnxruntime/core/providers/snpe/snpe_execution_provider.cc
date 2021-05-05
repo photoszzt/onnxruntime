@@ -91,7 +91,11 @@ SNPEExecutionProvider::GetCapability(const onnxruntime::GraphViewer& graph,
     }
 
     for (auto registry : kernel_registries) {
+#if defined(ORT_MINIMAL_BUILD)
+      auto st = registry->TryFindKernel(node, Type(), uint64_t(0), &snpe_kernel_def);
+#else
       auto st = registry->TryFindKernel(node, Type(), &snpe_kernel_def);
+#endif
 
       // at least one registry has a SNPE kernel for this node
       if (st.IsOK())
