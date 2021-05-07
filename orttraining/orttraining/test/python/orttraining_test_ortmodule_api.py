@@ -2252,3 +2252,37 @@ def test_forward_call_lots_None():
                  a, b, c, d, e, f, y, z)
         run_step(a.item() + b.item() + c.item() + d.item() + e.item() + f.item() + y.item() + z.item(),
                  **{'a': a, 'b': b, 'c': c, 'd': d, 'e': e, 'f': f, 'y': y, 'z': z})
+
+def test_model_with_registered_buffer_and_dropped_parameters():
+    class ModelWithBufferAndDroppedParameter(torch.nn.Module):
+        def __init__(self, input_size, hidden_size, num_classes):
+            super(ModelWithBufferAndDroppedParameter, self).__init__()
+
+            self.fc1 = torch.nn.Linear(input_size, hidden_size)
+            self.relu = torch.nn.ReLU()
+            self.fc2 = torch.nn.Linear(hidden_size, num_classes)
+            self.register_buffer("buffer", torch.ones(num_classes))
+
+        def forward(self, bool_argument, input1):
+            if bool_argument:
+                out = self.fc1(input1)
+                out = self.relu(out)
+                out = self.fc2(out)
+                out = out + self.buffer
+            else:
+                out = self.fc1(input1)
+                out = self.fc2(out)
+                out = self.relu(out)
+                out = out + self.buffer
+            return out
+
+    device = 'cuda'
+    N, D_in, H, D_out = 64, 784, 500, 10
+    model = ModelWithBufferAndDroppedParameter(D_in, H, D_out).to(device)
+    model = ORTModule(model)
+
+    bool_argument = torch.tensor(True)
+    x = torch.randn(N, D_in, device=device)
+
+    # Ensure that no exceptions are raised
+    out = model(bool_argument, x)
