@@ -417,7 +417,5 @@ Output = Dequantize(Input) -> AveragePool on fp32 data -> Quantize(output)
       });
 }
 
-
-
 }  // namespace contrib
 }  // namespace onnxruntime
