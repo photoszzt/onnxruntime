@@ -176,7 +176,7 @@ public:
   std::unique_ptr<zdl::SNPE::SNPE> InitializeSnpe(zdl::DlContainer::IDlContainer* container,
                                                   const std::vector<std::string>* output_tensor_names = nullptr,
                                                   const std::vector<std::string>* input_tensor_names = nullptr) {
-    zdl::SNPE::SNPEBuilder snpeBuilder(container);
+    zdl::SNPE::SNPEBuilder snpe_builder(container);
 
     // use setOutputTensors instead, also try zdl::DlSystem::Runtime_t::AIP_FIXED8_TF
     //return snpeBuilder.setOutputLayers({}).setRuntimeProcessor(zdl::DlSystem::Runtime_t::DSP_FIXED8_TF).build();
@@ -188,7 +188,7 @@ public:
       }
     }
 
-    std::unique_ptr<zdl::SNPE::SNPE> snpe = snpeBuilder.setOutputTensors(dl_output_tensor_names).setRuntimeProcessor(runtime_).build();
+    std::unique_ptr<zdl::SNPE::SNPE> snpe = snpe_builder.setOutputTensors(dl_output_tensor_names).setRuntimeProcessor(runtime_).build();
 
     input_tensor_map_.clear();
     input_tensors_.clear();
@@ -221,7 +221,7 @@ public:
                   const std::vector<std::string>* input_layer_names = nullptr) {
     std::unique_ptr<zdl::DlContainer::IDlContainer> container = zdl::DlContainer::IDlContainer::open(zdl::DlSystem::String(dlcPath));
     if (!container) {
-      LOGS_DEFAULT(ERROR) << "ailed open " << dlcPath << " container file";
+      LOGS_DEFAULT(ERROR) << "failed open " << dlcPath << " container file";
       return false;
     }
 
@@ -309,7 +309,6 @@ public:
         return false;
       }
       std::unique_ptr<zdl::DlSystem::ITensor> input_tensor = zdl::SNPE::SNPEFactory::getTensorFactory().createTensor(*input_shape);
-      //std::unique_ptr<zdl::DlSystem::ITensor> inputTensor = zdl::SNPE::SNPEFactory::getTensorFactory().createTensor(*inputShape, input, inputSize);
       if (!input_tensor) {
         LOGS_DEFAULT(ERROR) << "Snpe cannot create ITensor";
         return false;
