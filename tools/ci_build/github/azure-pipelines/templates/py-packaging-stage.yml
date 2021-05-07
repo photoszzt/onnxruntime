@@ -65,8 +65,6 @@ stages:
             PythonVersion: '3.8'
           Python39:
             PythonVersion: '3.9'
-          Python310:
-            PythonVersion: '3.10'
       steps:
       - checkout: self
         clean: true
@@ -168,8 +166,6 @@ stages:
             PythonVersion: '3.8'
           Python39:
             PythonVersion: '3.9'
-          Python310:
-            PythonVersion: '3.10'
       steps:
       - checkout: self
         clean: true
