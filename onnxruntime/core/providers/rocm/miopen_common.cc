@@ -52,7 +52,7 @@ miopenDataType_t MiopenTensor::GetDataType() {
   ORT_THROW("miopen engine currently supports only single/half/int32/int8 precision data types.");
 }
 
-template<>
+template <>
 miopenDataType_t MiopenTensor::GetDataType<float>() {
   return miopenFloat;
 }
@@ -87,6 +87,24 @@ const double Consts<double>::Zero = 0;
 const float Consts<half>::Zero = 0;
 
 const float Consts<half>::One = 1;
+
+template <>
+const half ReduceConsts<half>::One = 1.f;
+
+template <>
+const float ReduceConsts<float>::One = 1;
+
+template <>
+const double ReduceConsts<double>::One = 1;
+
+template <>
+const half ReduceConsts<half>::Zero = 0.f;
+
+template <>
+const float ReduceConsts<float>::Zero = 0;
+
+template <>
+const double ReduceConsts<double>::Zero = 0;
 
 }  // namespace rocm
 }  // namespace onnxruntime

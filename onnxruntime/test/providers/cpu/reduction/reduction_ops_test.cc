@@ -574,6 +574,25 @@ TEST(ReductionOpTest, ReduceLogSumExp_int32) {
   test.Run();
 }
 
+#if defined(USE_CUDA) || defined(USE_ROCM)
+TEST(ReductionOpTest, ReduceLogSumExp_half) {
+  OpTester test("ReduceLogSumExp");
+  test.AddAttribute("axes", std::vector<int64_t>{0, 2});
+  test.AddAttribute("keepdims", (int64_t)1);
+  test.AddInput<MLFloat16>("data", {3, 2, 2},
+                           FloatsToMLFloat16s({1.0f, 2.0f,
+                                               3.0f, 4.0f,
+
+                                               5.0f, 6.0f,
+                                               7.0f, 8.0f,
+
+                                               9.0f, 10.0f,
+                                               11.0f, 12.0f}));
+  test.AddOutput<MLFloat16>("reduced", {1, 2, 1}, FloatsToMLFloat16s({10.33174133f, 12.33174133f}));
+  test.Run();
+}
+#endif  // defined(USE_CUDA) || defined(USE_ROCM)
+
 #if !(defined USE_TENSORRT) && !(defined USE_TVM)
 TEST(ReductionOpTest, ReduceLogSumExp0DTensor) {
   OpTester test("ReduceLogSumExp");
@@ -784,6 +803,25 @@ TEST(ReductionOpTest, ReduceMax_uint8) {
   test.Run(OpTester::ExpectResult::kExpectSuccess, "", {kTensorrtExecutionProvider});  //TensorRT: axis must be 0
 #endif
 }
+
+#if defined(USE_CUDA) || defined(USE_ROCM)
+TEST(ReductionOpTest, ReduceMax_half) {
+  OpTester test("ReduceMax");
+  test.AddAttribute("axes", std::vector<int64_t>{1, 2});
+  test.AddAttribute("keepdims", (int64_t)1);
+  test.AddInput<MLFloat16>("data", {3, 2, 2},
+                           FloatsToMLFloat16s({1.0f, 2.0f,
+                                               3.0f, 4.0f,
+
+                                               5.0f, 6.0f,
+                                               7.0f, 8.0f,
+
+                                               9.0f, 10.0f,
+                                               11.0f, 12.0f}));
+  test.AddOutput<MLFloat16>("reduced", {3, 1, 1}, FloatsToMLFloat16s({4.0f, 8.0f, 12.0f}));
+  test.Run();
+}
+#endif  // defined(USE_CUDA) || defined(USE_ROCM)
 
 #if !(defined USE_TENSORRT) && !(defined USE_TVM)
 TEST(ReductionOpTest, ReduceMax0DTensor) {
@@ -1217,6 +1255,25 @@ TEST(ReductionOpTest, ReduceMin_uint8) {
   test.AddOutput<uint8_t>("reduced", {1, 2, 1}, {1, 3});
   test.Run(OpTester::ExpectResult::kExpectSuccess, "", {kTensorrtExecutionProvider});
 }
+
+#if defined(USE_CUDA) || defined(USE_ROCM)
+TEST(ReductionOpTest, ReduceMin_half) {
+  OpTester test("ReduceMin");
+  test.AddAttribute("axes", std::vector<int64_t>{0, 2});
+  test.AddAttribute("keepdims", (int64_t)1);
+  test.AddInput<MLFloat16>("data", {3, 2, 2},
+                           FloatsToMLFloat16s({1.0f, 2.0f,
+                                               3.0f, 4.0f,
+
+                                               5.0f, 6.0f,
+                                               7.0f, 8.0f,
+
+                                               9.0f, 10.0f,
+                                               11.0f, 12.0f}));
+  test.AddOutput<MLFloat16>("reduced", {1, 2, 1}, FloatsToMLFloat16s({1.0f, 3.0f}));
+  test.Run();
+}
+#endif  // defined(USE_CUDA) || defined(USE_ROCM)
 
 #if !(defined USE_TENSORRT) && !(defined USE_TVM)
 TEST(ReductionOpTest, ReduceMin0DTensor) {

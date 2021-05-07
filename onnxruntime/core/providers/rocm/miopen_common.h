@@ -44,5 +44,14 @@ struct Consts<half> {
   static const float One;
 };
 
+// Currently, miopenReduceTensor() requires alpha/beta to be the same data
+// type as the input type. This differs from cudnnReduceTensor() and other
+// MIOpen/CUDNN APIs where alpha/beta is float when input type is half (float16).
+template <typename ElemType>
+struct ReduceConsts {
+  static const ElemType Zero;
+  static const ElemType One;
+};
+
 }  // namespace rocm
 }  // namespace onnxruntime
